@@ -1,9 +1,11 @@
 
-7
+9
 00000	020F627C	d	h	0	RNG
 00001	020F6270	d	u	0	Count for RNG
 00002	02101328	w	s	0	Death HP
 00003	021011C8	w	s	0	Dracula HP
 00004	0211011C	w	u	0	True Dracula HP
-00005	020FCABD	w	s	0	Velocity Right
-00006	02111A15	w	s	0	Velocity Left
+00005	020FCABC	d	s	0	Jonathan horizontal speed
+00006	020FCAC0	d	s	0	Jonathan vertical speed
+00007	020FCC1C	d	s	0	Charotte horizontal speed
+00008	020FCC20	d	s	0	Charotte vertical speed
