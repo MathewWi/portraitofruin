@@ -1,8 +1,9 @@
 
-6
-00000	020F627C	d	h	0	RNG ?
-00001	02101328	w	s	0	Death HP
-00002	021011C8	w	s	0	Dracula HP
-00003	0211011C	w	u	0	True Dracula HP
-00004	020FCABD	w	s	0	Velocity Right
-00005	02111A15	w	s	0	Velocity Left
+7
+00000	020F627C	d	h	0	RNG
+00001	020F6270	d	u	0	Count for RNG
+00002	02101328	w	s	0	Death HP
+00003	021011C8	w	s	0	Dracula HP
+00004	0211011C	w	u	0	True Dracula HP
+00005	020FCABD	w	s	0	Velocity Right
+00006	02111A15	w	s	0	Velocity Left
