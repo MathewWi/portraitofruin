@@ -2,8 +2,8 @@
 -- This script generates a random number and write it to RAM
 -- This script is written for testing luck manipulation things.
 
-local RNGcounter = 9211         -- value of memory:0x020f6270
-local enemiesToDefeat = 0       -- number of enemies to defeat after suspend
+local RNGcounter = 8924             -- value of memory:0x020f6270 : FS=8590,8924,9211 (RNG=40580b,41a8a7,42c9e5)
+local changesAfterSuspend = 3*0     -- number of RNG calls after suspend
 
 if emu then
 	-- Use desmume r2871+, or it'll return wrong value.
@@ -87,8 +87,8 @@ end
 local RAM = { RNG = 0x020f627c, RNGcounter = 0x020f6270 }
 
 PoR_RandomInit(RNGcounter)
-for i = 1, enemiesToDefeat do
-	for j = 1, 3 do PoR_Random() end
+for i = 1, changesAfterSuspend do
+	PoR_Random()
 end
 if emu then
 	memory.writedword(RAM.RNG, PoR_RandomLast())
