@@ -2,7 +2,7 @@
 -- This script generates a random number and write it to RAM
 -- This script is written for testing luck manipulation things.
 
-local RNGcounter = 0            -- value of memory:0x020f6270
+local RNGcounter = 9211         -- value of memory:0x020f6270
 local enemiesToDefeat = 0       -- number of enemies to defeat after suspend
 
 if emu then
