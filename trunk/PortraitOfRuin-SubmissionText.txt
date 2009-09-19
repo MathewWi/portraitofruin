@@ -1,0 +1,36 @@
+
+An improved version of the [1293M|previous warp run].
+The overall strategy has been changed since we manipulate luck for item drops.
+
+You can download this run and other related resources from here: http://code.google.com/p/portraitofruin/
+
+* Emulator used: [=forum/p/210670#210670|DeSmuME 0.9.4+] (r2872 or later)
+** Fix ARM Cycle Count: on
+** Fast Fetch-Execute: off
+* Aims for fastest time
+* Abuses programming errors
+* Uses game reset sequence
+* Uses warps
+* Takes damage to save time
+* Manipulates luck
+* Length: -TODO- frames, -TODO- lag frames
+* Ingame time after ending/saving: -TODO-
+* Rerecord count: -TODO-
+
+!! Comments
+
+First of all, see the [2255S|submission text of previous run] for informations about general tricks.
+
+The core of the run is luck manipulation. This game has three RNG objects, one of them is used for
+enemy drops, other one is mainly used for enemy moves, and the rest is mainly used for visual effects.
+While playing the game, enemy drops changes only when you kill an enemy. That's definitely hard to manipulate.
+However, all those RNGs are reset according to a frame counter when you load a save file.
+
+Therefore, we tried to delay loading save file three times, because
+
+# To get Axe and Summon Zombie ability, which makes killing Persephones and Final Guard faster (82 delay frames added)
+# To get Frilly Camisole, -TODO- I don't know why :P (no delay frames added, we were lucky)
+# To get Final Sword, the strongest sword in the game (76 delay frames added)
+
+It's quite hard to manipulate them, so that gocha has written a Lua script which emulates RNG and writes its output to RAM.
+This allows to us find a good value without rewinding the movie to the  save selection screen for each try.
