@@ -130,17 +130,17 @@ emu.registerafter(function()
 	RNG_NumAdvanced = -1
 	PoR_RandomSeed(RNG_Previous)
 	for i = 0, searchMax do
-		if PoR_RandomLast() == memory.readdword(RAM.RNG) then
+		if PoR_RandomLast() == bit.tobit(memory.readdword(RAM.RNG)) then
 			RNG_NumAdvanced = i
 			break
 		end
 		PoR_Random()
 	end
-	RNG_Previous = memory.readdword(RAM.RNG)
+	RNG_Previous = bit.tobit(memory.readdword(RAM.RNG))
 end)
 
 gui.register(function()
-	PoR_RandomSeed(memory.readdword(RAM.RNG))
+	PoR_RandomSeed(bit.tobit(memory.readdword(RAM.RNG)))
 	agg.text(116, 5, string.format("NEXT:%08X", PoR_Random()))
 	agg.text(116, 26, "ADVANCED:" .. ((RNG_NumAdvanced == -1) and "???" or tostring(RNG_NumAdvanced)))
 end)
