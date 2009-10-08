@@ -5,22 +5,7 @@
 local RNGcounter = 8924             -- value of memory:0x020f6270 : FS=8590,8924,9211 (RNG=40580b,41a8a7,42c9e5)
 local changesAfterSuspend = 3*0     -- number of RNG calls after suspend
 
-if emu then
-	-- Use desmume r2871+, or it'll return wrong value.
-	if OR(0xffffffff, 0) ~= -1 then
-		--require("bit")
-		error("Bad bitwise operation detected. Use newer version to solve the problem.")
-	else
-		bit = {}
-		bit.band = AND
-		bit.bor  = OR
-		bit.bxor = XOR
-		function bit.tobit(num) return AND(num, 0xffffffff) end
-		function bit.lshift(num, shift) return SHIFT(num, -shift) end
-		function bit.rshift(num, shift) return SHIFT(num,  shift) end
-		function bit.arshift(num, shift) return math.floor(num / SHIFT(1, -shift)) end
-	end
-else
+if not bit then
 	require("bit")
 end
 
