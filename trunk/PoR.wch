@@ -5,7 +5,7 @@
 00002	020F6270	d	u	0	Count for RNG
 00003	02101328	w	s	0	Death HP
 00004	021011C8	w	s	0	Dracula HP
-00005	0211011C	w	u	0	True Dracula HP
+00005	02101068	w	u	0	True Dracula HP
 00006	021119E0	d	u	0	Ingame time
 00007	020FCAA4	d	h	0	Jonathan X position (next)
 00008	020FCAA8	d	h	0	Jonathan Y position (next)
