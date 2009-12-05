@@ -1,5 +1,5 @@
 
-15
+18
 00000	020F627C	d	h	0	RNG
 00001	020F6274	d	h	0	RNG #2
 00002	020F6270	d	u	0	Count for RNG
@@ -15,3 +15,6 @@
 0000C	020FCC14	d	h	0	Charotte Y position (next)
 0000D	020FCC1C	d	s	0	Charotte X speed
 0000E	020FCC20	d	s	0	Charotte Y speed
+0000F	020FCB45	b	u	0	Jonathan invulnerability
+00010	020FCCA5	b	u	0	Charotte invulnerability
+00011	021115FC	d	u	0	Change Cube cooldown
