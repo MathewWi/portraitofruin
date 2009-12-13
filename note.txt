@@ -1,5 +1,5 @@
 
-recover 1 mp: takes 32 frames
+recover 1 mp: takes 32 frames (for dart at least)
 dart: costs 3 mp
 
 backdash+dart (uses backdash+slide while recovering mp):
