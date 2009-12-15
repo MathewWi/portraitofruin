@@ -20,3 +20,47 @@ backdash+jump:
   (13784+13232+12680+12128+11576+11024+10472+9920+9368+8816+8264+7712+13784+13232+12680+12128+11576) / 17 = 11316.2353
 backdash+crouch:
   (13784+13232+12680+12128+11576+11024+8624+0) / 8 = 10381
+
+
+Holy Craymore:
+Level	Exp	Death	True Dracula
+2	48	-	-
+3	132	-	-
+4	280	-	-
+5	510	54	54
+6	840	57	57
+7	1288	60	-
+8	1872	62	-
+9	2160	64	-
+10	3520	67	67
+11	4620	-	-
+
+Death HP = 4444
+True Dracula HP = 6666
+4444 + 6666 = 11110
+math.ceil(11110 / (67+1)) = 164
+math.ceil(11110 / (64+1)) = 171
+
+Skill MAX Dart to Death (Lv.10): 1+17
+Skill MAX Shuriken to Death (Lv.10): 16+16
+Skill MAX Dart to True Dracula (Lv.10): 1+1
+Skill MAX Shuriken to True Dracula (Lv.10): 1+1+1+1
+
+Total exp of the first any% run: 3573 (Lv.10)
+= Lerajie + Persephone*3 + Mummy*2 + Devil Wheel + Mummy + Astarte + Persephone + Persephone*5 + Skull Archer + Larva + Skelerang
+= 42 + 35*3 + 24*2 + 56 + 24 + 3000 + 35 + 35*5 + 16 + 6 + 77 = 3584? :o
+
+Ukoback = 19
+
+Lv.4 (280):
+42 + 35*2 + 24*7 = 280
+42 + 35*2 + 24*5 + 56 = 288
+42 + 35*3 + 24*6 = 291
+42 + 35*3 + 24*4 + 56 = 299
+
+Lv.10 (240+):
+35*3 + 77*2 = 259
+35*5 + 77 = 252
+
+42 + 35*2 + 24*7 + 3000 + 35*3 + 77*2 = 3539
+Considering level up screen, Lv.9 might be faster?
