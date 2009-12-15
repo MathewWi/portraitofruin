@@ -35,12 +35,16 @@ Level	Exp	Death	True Dracula
 10	3520	67	67
 11	4620	-	-
 
+Astarte HP = 1500
 Death HP = 4444
 True Dracula HP = 6666
 4444 + 6666 = 11110
-math.ceil(11110 / (67+1)) = 164
-math.ceil(11110 / (64+1)) = 171
+4444 / (67+1) = 164
+4444 / (67 + 1) = 65.3529412; 6666 / (67 + 1) = 98.0294118
+4444 / (64 + 1) = 68.3692308; 6666 / (64 + 1) = 102.553846
 
+Dart to Astarte (Lv.2-3): 2+17
+Dart to Astarte (Lv.4): 5+22
 Skill MAX Dart to Death (Lv.10): 1+17
 Skill MAX Shuriken to Death (Lv.10): 16+16
 Skill MAX Dart to True Dracula (Lv.10): 1+1
@@ -63,4 +67,4 @@ Lv.10 (240+):
 35*5 + 77 = 252
 
 42 + 35*2 + 24*7 + 3000 + 35*3 + 77*2 = 3539
-Considering level up screen, Lv.9 might be faster?
+<del>Considering level up screen, Lv.9 might be faster?</del> No, I think it doesn't after all.
