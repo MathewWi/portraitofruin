@@ -48,11 +48,12 @@ gui.register(function()
 	if jo_visible then
 		if jo_spr >= 0 and jo_spr <= 0x0f then
 		-- y 9 px lower?
+			gui.opacity(0.68)
 			local x, y = (jo_spr % 0x10), math.floor(jo_spr / 0x10)
 			if jo_dir < 0 then
-				gui.gdoverlay(jo_x - camx - 32, jo_y - camy - 48, jogl, x*64, y*64, 64, 64)
+				gui.gdoverlay(32 + jo_x - camx - 32, jo_y - camy - 48, jogl, x*64, y*64, 64, 64)
 			else
-				gui.gdoverlay(jo_x - camx - 32, jo_y - camy - 48, jogr, (15-x)*64, y*64, 64, 64)
+				gui.gdoverlay(32 + jo_x - camx - 32, jo_y - camy - 48, jogr, (15-x)*64, y*64, 64, 64)
 			end
 		end
 		gui.box(jo_x - camx - 32, jo_y - camy - 48, jo_x - camx + 31, jo_y - camy + 15, "#ff000020", "#ff000080")
