@@ -52,10 +52,13 @@ gui.register(function()
 	gui.text(164, 10, string.format("area: %d %d %d", area, room_x, room_y))
 	gui.text(164, 20, string.format("J: %d %d %d %04X", memory.readbyte(0x020fcaf0), memory.readbyte(0x020fcafc), memory.readbyte(0x020fcafe), jo_spr))
 	gui.text(164, 30, string.format("C: %d %d %d %04X", memory.readbyte(0x020fcc50), memory.readbyte(0x020fcc5c), memory.readbyte(0x020fcc5e), ch_spr))
+	gui.text(128, 40, string.format("J: %08X %08X", jo_x, jo_y))
 	if jo_visible then
 		gui.opacity(0.68*1)
 		joDrawSprite( 64 + jo_x - camx - 32, jo_y - camy - 48, jo_spr, jo_dir >= 0)
 		joDrawSprite(-64 + jo_x - camx - 32, jo_y - camy - 48, jo_spr, jo_dir < 0)
+gui.opacity(1.0*1)
+joDrawSprite( 0 + jo_x - camx - 32, jo_y - camy - 48, jo_spr, jo_dir >= 0)
 
 		gui.opacity(1)
 		gui.box(jo_x - camx - 32, jo_y - camy - 48, jo_x - camx + 31, jo_y - camy + 15, "clear", "#ff000080")
