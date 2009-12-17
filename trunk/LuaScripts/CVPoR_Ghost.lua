@@ -2,9 +2,10 @@
 require("gd")
 if not bit then require("bit") end
 
-_jogl = gd.createFromPng("D:\\gocha\\work\\jonadb.png")
+root = ""
+_jogl = gd.createFromPng(root.."jonadb.png")
 jogl = _jogl:gdStr()
-_jogr = gd.createFromPng("D:\\gocha\\work\\jonadb-r.png")
+_jogr = gd.createFromPng(root.."jonadb-r.png")
 jogr = _jogr:gdStr()
 --[[
 jogl = {}
