@@ -40,24 +40,14 @@ gui.register(function()
 	ch_y = math.floor(memory.readdword(0x020FCD08) / 0x1000)
 	ch_dir = ((memory.readbytesigned(0x020ffdd4)<0) and -1 or 0)
 	gui.text(164, 10, string.format("area: %d %d %d", area, room_x, room_y))
-	gui.text(164, 20, string.format("%d %d %d %04X", memory.readbyte(0x020fcaf0), memory.readbyte(0x020fcafc), memory.readbyte(0x020fcafe), memory.readbyte(0x020fcb04)))
+	gui.text(164, 20, string.format("%d %d %d %04X", memory.readbyte(0x020fcaf0), memory.readbyte(0x020fcafc), memory.readbyte(0x020fcafe), jo_spr))
 	if jo_visible then
 		gui.opacity(0.68*1)
-		joDrawSprite( 32 + jo_x - camx - 32, jo_y - camy - 48, jo_spr, jo_dir >= 0)
-		joDrawSprite(-32 + jo_x - camx - 32, jo_y - camy - 48, jo_spr, jo_dir < 0)
-		--[[
-		local x, y = (jo_spr % 0x10), math.floor(jo_spr / 0x10)
-		if jo_dir < 0 then
-			gui.gdoverlay(32 + jo_x - camx - 32, jo_y - camy - 48, jogl, x*64, y*64, 64, 64)
-		else
-			gui.gdoverlay(32 + jo_x - camx - 32, jo_y - camy - 48, jogr, (15-x)*64, y*64, 64, 64)
-		end
-		]]--
+		joDrawSprite( 64 + jo_x - camx - 32, jo_y - camy - 48, jo_spr, jo_dir >= 0)
+		joDrawSprite(-64 + jo_x - camx - 32, jo_y - camy - 48, jo_spr, jo_dir < 0)
 
 		gui.opacity(1)
 		gui.box(jo_x - camx - 32, jo_y - camy - 48, jo_x - camx + 31, jo_y - camy + 15, "clear", "#ff000080")
--- 		gui.box(jo_x - camx - 32, jo_y - camy - 48, jo_x - camx + 31, jo_y - camy + 15, "#ff000020", "#ff000080")
--- 		gui.box(jo_x - camx - 32, jo_y - camy - 63, jo_x - camx + 31, jo_y - camy, "#ff000020", "#ff000080")
 		gui.opacity(1)
 	end
 	if ch_visible then
