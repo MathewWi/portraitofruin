@@ -55,22 +55,22 @@ gui.register(function()
 	gui.text(128, 40, string.format("J: %08X %08X", jo_x, jo_y))
 	if jo_visible then
 		gui.opacity(0.68*1)
-		joDrawSprite( 64 + jo_x - camx - 32, jo_y - camy - 48, jo_spr, jo_dir >= 0)
-		joDrawSprite(-64 + jo_x - camx - 32, jo_y - camy - 48, jo_spr, jo_dir < 0)
-gui.opacity(1.0*1)
-joDrawSprite( 0 + jo_x - camx - 32, jo_y - camy - 48, jo_spr, jo_dir >= 0)
+		joDrawSprite( 64 + jo_x - camx - 32, jo_y - camy - 48 - 8, jo_spr, jo_dir >= 0)
+		joDrawSprite(-64 + jo_x - camx - 32, jo_y - camy - 48 - 8, jo_spr, jo_dir < 0)
+gui.opacity(1.0*0)
+joDrawSprite( 0 + jo_x - camx - 32, jo_y - camy - 48 - 8, jo_spr, jo_dir >= 0)
 
 		gui.opacity(1)
-		gui.box(jo_x - camx - 32, jo_y - camy - 48, jo_x - camx + 31, jo_y - camy + 15, "clear", "#ff000080")
+		gui.box(jo_x - camx - 32, jo_y - camy - 48 - 8, jo_x - camx + 31, jo_y - camy + 15 - 8, "clear", "#ff000080")
 		gui.opacity(1)
 	end
 	if ch_visible then
 		gui.opacity(0.68*1)
-		chDrawSprite( 64 + ch_x - camx - 32, ch_y - camy - 48, ch_spr, ch_dir >= 0)
-		chDrawSprite(-64 + ch_x - camx - 32, ch_y - camy - 48, ch_spr, ch_dir < 0)
+		chDrawSprite( 64 + ch_x - camx - 32, ch_y - camy - 48 - 8, ch_spr, ch_dir >= 0)
+		chDrawSprite(-64 + ch_x - camx - 32, ch_y - camy - 48 - 8, ch_spr, ch_dir < 0)
 
 		gui.opacity(1)
-		gui.box(ch_x - camx - 32, ch_y - camy - 48, ch_x - camx + 31, ch_y - camy + 15, "clear", "#ff000080")
+		gui.box(ch_x - camx - 32, ch_y - camy - 48 - 8, ch_x - camx + 31, ch_y - camy + 15 - 8, "clear", "#ff000080")
 		gui.opacity(1)
 	end
 end)
