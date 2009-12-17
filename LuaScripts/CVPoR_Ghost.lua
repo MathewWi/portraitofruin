@@ -7,19 +7,15 @@ _jogl = gd.createFromPng(root.."jonadb.png")
 jogl = _jogl:gdStr()
 _jogr = gd.createFromPng(root.."jonadb-r.png")
 jogr = _jogr:gdStr()
---[[
-jogl = {}
-jogr = {}
-for i = 0, 0x0f do
-	local small = gd.createFromPng("D:\\gocha\\work\\blank64.png")
-	joglm:alphaBlending(true)
-	small:alphaBlending(true)
-	small:saveAlpha(true)
-	gd.copyMerge(small, joglm, 0, 0, (i % 0x10)*64, math.floor(i/0x10)*64, 64, 64, 50)
-	jogl[i+1] = small
-	jogr[i+1] = small
+
+function joDrawSprite(x, y, n, reverse)
+	local xi, yi = (n % 0x10), math.floor(n / 0x10)
+	if not reverse then
+		gui.gdoverlay(x, y, jogl, xi * 64, yi * 64, 64, 64)
+	else
+		gui.gdoverlay(x, y, jogr, (15 - xi) * 64, yi * 64, 64, 64)
+	end
 end
-]]
 
 gui.register(function()
 	jo_visible = bit.band(memory.readbyte(0x020fcaf5), 0x80)==0
@@ -46,18 +42,23 @@ gui.register(function()
 	gui.text(164, 10, string.format("area: %d %d %d", area, room_x, room_y))
 	gui.text(164, 20, string.format("%d %d %d %04X", memory.readbyte(0x020fcaf0), memory.readbyte(0x020fcafc), memory.readbyte(0x020fcafe), memory.readbyte(0x020fcb04)))
 	if jo_visible then
-		if jo_spr >= 0 and jo_spr <= 0x0f then
-		-- y 9 px lower?
-			gui.opacity(0.68)
-			local x, y = (jo_spr % 0x10), math.floor(jo_spr / 0x10)
-			if jo_dir < 0 then
-				gui.gdoverlay(32 + jo_x - camx - 32, jo_y - camy - 48, jogl, x*64, y*64, 64, 64)
-			else
-				gui.gdoverlay(32 + jo_x - camx - 32, jo_y - camy - 48, jogr, (15-x)*64, y*64, 64, 64)
-			end
+		gui.opacity(0.68*1)
+		joDrawSprite( 32 + jo_x - camx - 32, jo_y - camy - 48, jo_spr, jo_dir >= 0)
+		joDrawSprite(-32 + jo_x - camx - 32, jo_y - camy - 48, jo_spr, jo_dir < 0)
+		--[[
+		local x, y = (jo_spr % 0x10), math.floor(jo_spr / 0x10)
+		if jo_dir < 0 then
+			gui.gdoverlay(32 + jo_x - camx - 32, jo_y - camy - 48, jogl, x*64, y*64, 64, 64)
+		else
+			gui.gdoverlay(32 + jo_x - camx - 32, jo_y - camy - 48, jogr, (15-x)*64, y*64, 64, 64)
 		end
-		gui.box(jo_x - camx - 32, jo_y - camy - 48, jo_x - camx + 31, jo_y - camy + 15, "#ff000020", "#ff000080")
+		]]--
+
+		gui.opacity(1)
+		gui.box(jo_x - camx - 32, jo_y - camy - 48, jo_x - camx + 31, jo_y - camy + 15, "clear", "#ff000080")
+-- 		gui.box(jo_x - camx - 32, jo_y - camy - 48, jo_x - camx + 31, jo_y - camy + 15, "#ff000020", "#ff000080")
 -- 		gui.box(jo_x - camx - 32, jo_y - camy - 63, jo_x - camx + 31, jo_y - camy, "#ff000020", "#ff000080")
+		gui.opacity(1)
 	end
 	if ch_visible then
 		gui.box(ch_x - camx - 32, ch_y - camy - 63, ch_x - camx + 31, ch_y - camy, "#0000ff20", "#0000ff80")
