@@ -3,10 +3,10 @@ require("gd")
 if not bit then require("bit") end
 
 root = ""
-_jogl = gd.createFromPng(root.."jonadb.png")
-jogl = _jogl:gdStr()
-_jogr = gd.createFromPng(root.."jonadb-r.png")
-jogr = _jogr:gdStr()
+jogl = gd.createFromPng(root.."jonadb.png"):gdStr()
+jogr = gd.createFromPng(root.."jonadb-r.png"):gdStr()
+chgl = gd.createFromPng(root.."chardb.png"):gdStr()
+chgr = gd.createFromPng(root.."chardb-r.png"):gdStr()
 
 function joDrawSprite(x, y, n, reverse)
 	local xi, yi = (n % 0x10), math.floor(n / 0x10)
@@ -14,6 +14,15 @@ function joDrawSprite(x, y, n, reverse)
 		gui.gdoverlay(x, y, jogl, xi * 64, yi * 64, 64, 64)
 	else
 		gui.gdoverlay(x, y, jogr, (15 - xi) * 64, yi * 64, 64, 64)
+	end
+end
+
+function chDrawSprite(x, y, n, reverse)
+	local xi, yi = (n % 0x10), math.floor(n / 0x10)
+	if not reverse then
+		gui.gdoverlay(x, y, chgl, xi * 64, yi * 64, 64, 64)
+	else
+		gui.gdoverlay(x, y, chgr, (15 - xi) * 64, yi * 64, 64, 64)
 	end
 end
 
@@ -39,8 +48,10 @@ gui.register(function()
 	ch_x = math.floor(memory.readdword(0x020FCD04) / 0x1000)
 	ch_y = math.floor(memory.readdword(0x020FCD08) / 0x1000)
 	ch_dir = ((memory.readbytesigned(0x020ffdd4)<0) and -1 or 0)
+	ch_spr = memory.readword(0x020fcc64)
 	gui.text(164, 10, string.format("area: %d %d %d", area, room_x, room_y))
-	gui.text(164, 20, string.format("%d %d %d %04X", memory.readbyte(0x020fcaf0), memory.readbyte(0x020fcafc), memory.readbyte(0x020fcafe), jo_spr))
+	gui.text(164, 20, string.format("J: %d %d %d %04X", memory.readbyte(0x020fcaf0), memory.readbyte(0x020fcafc), memory.readbyte(0x020fcafe), jo_spr))
+	gui.text(164, 30, string.format("C: %d %d %d %04X", memory.readbyte(0x020fcc50), memory.readbyte(0x020fcc5c), memory.readbyte(0x020fcc5e), ch_spr))
 	if jo_visible then
 		gui.opacity(0.68*1)
 		joDrawSprite( 64 + jo_x - camx - 32, jo_y - camy - 48, jo_spr, jo_dir >= 0)
@@ -51,6 +62,12 @@ gui.register(function()
 		gui.opacity(1)
 	end
 	if ch_visible then
-		gui.box(ch_x - camx - 32, ch_y - camy - 63, ch_x - camx + 31, ch_y - camy, "#0000ff20", "#0000ff80")
+		gui.opacity(0.68*1)
+		chDrawSprite( 64 + ch_x - camx - 32, ch_y - camy - 48, ch_spr, ch_dir >= 0)
+		chDrawSprite(-64 + ch_x - camx - 32, ch_y - camy - 48, ch_spr, ch_dir < 0)
+
+		gui.opacity(1)
+		gui.box(ch_x - camx - 32, ch_y - camy - 48, ch_x - camx + 31, ch_y - camy + 15, "clear", "#ff000080")
+		gui.opacity(1)
 	end
 end)
