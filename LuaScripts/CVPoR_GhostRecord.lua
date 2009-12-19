@@ -1,7 +1,7 @@
 -- Castlevania - Portrait of Ruin
 -- Ghost record script, based on amaurea's one.
 
-outprefix = "D:\\gocha\\work\\".."ghost"
+outprefix = "ghost"
 dumpfile = outprefix..".dump"
 nomovie = not false
 io.output(dumpfile)
