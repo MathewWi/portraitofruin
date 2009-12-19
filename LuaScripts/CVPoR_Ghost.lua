@@ -39,6 +39,8 @@ gui.register(function()
 	-- jo ani pat#? 020fcafe
 	-- jo ani timer 020fcb02
 	-- ch ani sheet 020fcc50 ...
+	-- jo blinking? 020fca9f
+	-- ch blinking? 020fcbff
 	camx = math.floor(memory.readdword(0x02111a08) / 0x1000)
 	camy = math.floor(memory.readdword(0x02111a0c) / 0x1000)
 	jo_x = math.floor(memory.readdword(0x020FCBA4) / 0x1000)
@@ -54,24 +56,30 @@ gui.register(function()
 	gui.text(164, 30, string.format("C: %d %04X", memory.readbyte(0x020fcd02), ch_spr))
 	gui.text(164, 40, string.format("J: %d, %d", (jo_spr%0x10)*64, math.floor(jo_spr/0x10)*64))
 	gui.text(164, 50, string.format("C: %d, %d", (ch_spr%0x10)*64, math.floor(ch_spr/0x10)*64))
+	if memory.readbyte(0x020f6284) ~= 2 then
+		return
+	end
+	fade = math.abs(memory.readbytesigned(0x020f61fc)) -- 16=white -16=black?
+	if fade > 16 then fade = 16 end
+	fade = (16 - fade) / 16.0
 	if jo_visible then
-		gui.opacity(0.68*1)
+		gui.opacity(0.68*1 * fade)
 		joDrawSprite( 64 + jo_x - camx - 32, jo_y - camy - 48 - 8, jo_spr, jo_dir >= 0)
 		joDrawSprite(-64 + jo_x - camx - 32, jo_y - camy - 48 - 8, jo_spr, jo_dir < 0)
-gui.opacity(1.0*0)
+gui.opacity(1.0*0 * fade)
 joDrawSprite( 0 + jo_x - camx - 32, jo_y - camy - 48 - 8, jo_spr, jo_dir >= 0)
 
-		gui.opacity(1)
+		gui.opacity(1 * fade)
 		gui.box(jo_x - camx - 32, jo_y - camy - 48 - 8, jo_x - camx + 31, jo_y - camy + 15 - 8, "clear", "#ff000080")
-		gui.opacity(1)
+		gui.opacity(1 * fade)
 	end
 	if ch_visible then
-		gui.opacity(0.68*1)
+		gui.opacity(0.68*1 * fade)
 		chDrawSprite( 64 + ch_x - camx - 32, ch_y - camy - 48 - 8, ch_spr, ch_dir >= 0)
 		chDrawSprite(-64 + ch_x - camx - 32, ch_y - camy - 48 - 8, ch_spr, ch_dir < 0)
 
-		gui.opacity(1)
+		gui.opacity(1 * fade)
 		gui.box(ch_x - camx - 32, ch_y - camy - 48 - 8, ch_x - camx + 31, ch_y - camy + 15 - 8, "clear", "#ff000080")
-		gui.opacity(1)
+		gui.opacity(1 * fade)
 	end
 end)
