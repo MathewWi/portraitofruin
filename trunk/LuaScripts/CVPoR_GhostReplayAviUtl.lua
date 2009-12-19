@@ -4,7 +4,7 @@
 require("gd")
 require("bit")
 
-root_dir = "D:\\gocha\\work\\"
+root_dir = ""
 ghost_files = { "HAHA.ghost", "1.ghost", "2.ghost" }
 ghost_trans = { 0, 0.75, 0.75 }
 jo_gdpose, ch_gdpose = {}, {}
