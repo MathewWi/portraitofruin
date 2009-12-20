@@ -40,6 +40,8 @@ for i, v in ipairs(ghost_files) do
 		e.world = io.read("*n")
 		e.roomx = io.read("*n")
 		e.roomy = io.read("*n")
+		e.camx = io.read("*n")
+		e.camy = io.read("*n")
 		e.jo_posx = io.read("*n")
 		e.jo_posy = io.read("*n")
 		e.jo_hitx1 = io.read("*n")
