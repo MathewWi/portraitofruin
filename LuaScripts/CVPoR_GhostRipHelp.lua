@@ -26,11 +26,6 @@ function chDrawSprite(x, y, n, reverse)
 	end
 end
 
-emu.registerafter(function()
-	jo_spr_after = memory.readword(0x020fcb04)
-	ch_spr_after = memory.readword(0x020fcc64)
-end)
-
 gui.register(function()
 	jo_visible = bit.band(memory.readbyte(0x020fcaf5), 0x80)==0
 	ch_visible = bit.band(memory.readbyte(0x020fcc55), 0x80)==0
@@ -46,24 +41,25 @@ gui.register(function()
 	-- ch ani sheet 020fcc50 ...
 	-- jo blinking? 020fca9f
 	-- ch blinking? 020fcbff
-	camx = math.floor(memory.readdword(0x02111a08) / 0x1000)
-	camy = math.floor(memory.readdword(0x02111a0c) / 0x1000)
+	camx = math.floor(memory.readdwordsigned(0x02111a08) / 0x1000)
+	camy = math.floor(memory.readdwordsigned(0x02111a0c) / 0x1000)
 	jo_x = math.floor(memory.readdword(0x020FCBA4) / 0x1000)
 	jo_y = math.floor(memory.readdword(0x020FCBA8) / 0x1000)
 	jo_dir = ((memory.readbytesigned(0x020ff174)<0) and -1 or 0)
 	jo_spr = memory.readword(0x020fcb04)
-	jo_hitx1 = memory.readword(0x0213296e)
-	jo_hity1 = memory.readword(0x02132970)
-	jo_hitx2 = memory.readword(0x02132972)
-	jo_hity2 = memory.readword(0x02132974)
+	jo_hitx1 = memory.readwordsigned(0x0213296e)
+	jo_hity1 = memory.readwordsigned(0x02132970)
+	jo_hitx2 = memory.readwordsigned(0x02132972)
+	jo_hity2 = memory.readwordsigned(0x02132974)
 	ch_x = math.floor(memory.readdword(0x020FCD04) / 0x1000)
 	ch_y = math.floor(memory.readdword(0x020FCD08) / 0x1000)
 	ch_dir = ((memory.readbytesigned(0x020ffdd4)<0) and -1 or 0)
 	ch_spr = memory.readword(0x020fcc64)
-	ch_hitx1 = memory.readword(0x02132982)
-	ch_hity1 = memory.readword(0x02132984)
-	ch_hitx2 = memory.readword(0x02132986)
-	ch_hity2 = memory.readword(0x02132988)
+	ch_hitx1 = memory.readwordsigned(0x02132982)
+	ch_hity1 = memory.readwordsigned(0x02132984)
+	ch_hitx2 = memory.readwordsigned(0x02132986)
+	ch_hity2 = memory.readwordsigned(0x02132988)
+	gui.text(164, 0, string.format("cams: %d %d", camx, camy))
 	gui.text(164, 10, string.format("area: %d %d %d", area, room_x, room_y))
 	gui.text(164, 20, string.format("J: %d %04X", memory.readbyte(0x020fcb02), jo_spr))
 	gui.text(164, 30, string.format("C: %d %04X", memory.readbyte(0x020fcd02), ch_spr))
@@ -84,7 +80,7 @@ joDrawSprite( 0 + jo_x - camx - 32, jo_y - camy - 48 - 8, jo_spr, jo_dir >= 0)
 
 		gui.opacity(1 * fade)
 		gui.box(jo_x - camx - 32, jo_y - camy - 48 - 8, jo_x - camx + 31, jo_y - camy + 15 - 8, "clear", "#ff000080")
-		gui.box(jo_hitx1 - camx, jo_hity1 - camy, jo_hitx2 - camx, jo_hity2 - camy, "clear", "green")
+		-- gui.box(jo_hitx1 - camx, jo_hity1 - camy, jo_hitx2 - camx, jo_hity2 - camy, "clear", "green")
 		gui.opacity(1 * fade)
 	end
 	if ch_visible then
@@ -94,10 +90,7 @@ joDrawSprite( 0 + jo_x - camx - 32, jo_y - camy - 48 - 8, jo_spr, jo_dir >= 0)
 
 		gui.opacity(1 * fade)
 		gui.box(ch_x - camx - 32, ch_y - camy - 48 - 8, ch_x - camx + 31, ch_y - camy + 15 - 8, "clear", "#ff000080")
-		gui.box(ch_hitx1 - camx, ch_hity1 - camy, ch_hitx2 - camx, ch_hity2 - camy, "clear", "green")
+		-- gui.box(ch_hitx1 - camx, ch_hity1 - camy, ch_hitx2 - camx, ch_hity2 - camy, "clear", "green")
 		gui.opacity(1 * fade)
 	end
-	
-	if jo_spr_after and jo_spr ~= jo_spr_after then print("Jonathan: "..tostring(jo_spr)..", "..tostring(jo_spr_after)) end
-	if ch_spr_after and ch_spr ~= ch_spr_after then print("Charlotte: "..tostring(ch_spr)..", "..tostring(ch_spr_after)) end
 end)
