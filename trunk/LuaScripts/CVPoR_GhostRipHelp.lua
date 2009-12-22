@@ -61,10 +61,14 @@ gui.register(function()
 	ch_hity2 = memory.readwordsigned(0x02132988)
 	gui.text(164, 0, string.format("cams: %d %d", camx, camy))
 	gui.text(164, 10, string.format("area: %d %d %d", area, room_x, room_y))
-	gui.text(164, 20, string.format("J: %d %04X", memory.readbyte(0x020fcb02), jo_spr))
-	gui.text(164, 30, string.format("C: %d %04X", memory.readbyte(0x020fcd02), ch_spr))
-	gui.text(164, 40, string.format("J: %d, %d", (jo_spr%0x10)*64, math.floor(jo_spr/0x10)*64))
-	gui.text(164, 50, string.format("C: %d, %d", (ch_spr%0x10)*64, math.floor(ch_spr/0x10)*64))
+	if jo_visible then
+		gui.text(164, 20, string.format("J: %d %04X", memory.readbyte(0x020fcb02), jo_spr))
+		gui.text(164, 30, string.format("J: %d, %d", (jo_spr%0x10)*64, math.floor(jo_spr/0x10)*64))
+	end
+	if ch_visible then
+		gui.text(164, 40, string.format("C: %d %04X", memory.readbyte(0x020fcd02), ch_spr))
+		gui.text(164, 50, string.format("C: %d, %d", (ch_spr%0x10)*64, math.floor(ch_spr/0x10)*64))
+	end
 	if memory.readbyte(0x020f6284) ~= 2 then
 		return
 	end
