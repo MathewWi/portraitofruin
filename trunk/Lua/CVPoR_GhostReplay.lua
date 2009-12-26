@@ -76,7 +76,7 @@ function getFrameState()
 	e.fade = memory.readbytesigned(0x020f61fc)
 	e.region = memory.readbyte(0x02111785)
 	e.roomx, e.roomy = memory.readbyte(0x02111778), memory.readbyte(0x0211177a)
-	e.scrollx, e.scrolly = memory.readdwordsigned(0x02111a08), memory.readdwordsigned(0x02111a0c)
+	e.scrollx, e.scrolly = memory.readdwordsigned(0x021119fc), memory.readdwordsigned(0x02111a00)
 	e.jonathan = {
 		posx = memory.readdwordsigned(0x020fcab0),
 		posy = memory.readdwordsigned(0x020fcab4),
