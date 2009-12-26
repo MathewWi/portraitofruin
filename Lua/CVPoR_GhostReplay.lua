@@ -5,19 +5,19 @@
 root_dir = ""
 
 -- Ghost definitions
-ghost_dumps  = { "arukado.ghost" }
+ghost_dumps  = { "PoR-Any%[1293M].ghost" }
 
 -- Timing options
-sync_mode    = "ingame"
-display_mode = "ingame"
+sync_mode    = "realtime"
+display_mode = "ingame" -- NYI
 offset_mode  = "room"
 
-show_delays = true
+show_delays = true -- NYI
 
 -- Graphics options
 own_color = "white"
 ghost_color = { "red" }
-ghost_opacity = 0.75
+ghost_opacity = { 0.75 }
 
 -- These require gd
 ghost_gfx = 1 -- nil to turn off. Array to specify individually
@@ -41,7 +41,7 @@ emudata = {}
 function main()
 	frame = framecount()
 	room = get_room()
-	emudata[1] = getFrameState()
+	updateEmuFrameState()
 
 	fcount = fcount + 1
 	last_igframe = igframe()
@@ -54,10 +54,8 @@ end
 function update_screen()
 	room = get_room()
 	for index, ghost in ipairs(ghosts) do repeat
-		-- Hack: We have an off by one error due to recorder and player
-		-- running at different stages. This results in the ghosts being
-		-- one frame ahead of the rest (I think that's the reason anyway).
-		-- Fix it by tweaking the framecount manually:
+		-- Apparently, graphical updates come slightly later than memory updates.
+		-- Therefore, fix the timing by tweaking the framecount manually:
 		local sframe  = syncframe()-1
 		local gframe  = sync2frame(sframe, ghost)
 		local osframe = offset(sframe, ghost)
@@ -155,11 +153,34 @@ function adjustFrameState(e)
 	if not e then return e end
 	e.lagged = boolnum(e.lagged)
 	e.room = join_room(e.region, e.roomx, e.roomy)
-	e.jonathan.blink = boolnum(e.jonathan.blink)
-	e.jonathan.visible = ((math.floor(e.jonathan.visual / 0x80) % 2) == 0)
-	e.charlotte.blink = boolnum(e.charlotte.blink)
-	e.charlotte.visible = ((math.floor(e.charlotte.visual / 0x80) % 2) == 0)
+	local players = { e.jonathan, e.charlotte }
+	for i, player in ipairs(players) do
+		player.blink = boolnum(player.blink)
+		player.visible = ((math.floor(player.visual / 0x80) % 2) == 0)
+
+		local x, y
+		x = math.floor((player.posx - e.scrollx) / 0x1000) - 32
+		y = math.floor((player.posy - e.scrolly) / 0x1000) - 32
+		player.offscreen = (x <= -64 or y <= -64 or x >= 256 or y >= 192)
+	end
 	return e
+end
+
+function updateEmuFrameState()
+	local data = getFrameState()
+	if emudata[1] == nil then
+		-- setup
+		for i = 1, 4 do
+			emudata[i] = data
+		end
+	else
+		if data.igframe ~= emudata[1].igframe then
+			for i = 4, 2, -1 do
+				emudata[i] = emudata[i-1]
+			end
+		end
+		emudata[1] = data
+	end
 end
 
 -- Main data table. An array of tables for each ghost.
@@ -189,7 +210,7 @@ function init()
 	if ghost_gfx then for i,info in ipairs(pose_info) do
 		table.insert(pose_data, read_pose(info))
 	end end
-	emudata[1] = getFrameState()
+	updateEmuFrameState()
 	-- Set up saves
 	-- savestate.registersave(function() return last_igframe, last_room, last_transition[1], last_transition[2], last_transition[3], fcount end)
 	-- savestate.registerload(function(_,a,b,c,d,e,f) last_igframe, last_room, last_transition[1], last_transition[2], last_transition[3], fcount = a, b, c, d, e, f end)
@@ -381,18 +402,20 @@ function draw_ghost_gfx(ghost,frame)
 	if not ghost_gfx then return end
 	local data = ghost.data[frame]
 	if not data then return end
+	if emudata[1].mode ~= 2 then return end
 
-	local scrollx, scrolly = emudata[1].scrollx, emudata[1].scrolly
+	local scrollx, scrolly = emudata[3].scrollx, emudata[3].scrolly
 	local dx, dy = pose_info[ghost.gfx][3], pose_info[ghost.gfx][4]
 	local ox, oy = pose_info[ghost.gfx][5], pose_info[ghost.gfx][6]
 	local players = { data.jonathan, data.charlotte }
 	for i, player in ipairs(players) do
 		local x, y = math.floor((player.posx - scrollx) / 0x1000), math.floor((player.posy - scrolly) / 0x1000)
+		-- if player.offscreen then x, y = (256-64)/2 + ox, (192-64)/2 + oy end
 		if player.visible then
 			local xi, yi = player.pose % 0x10, math.floor(player.pose / 0x10)
 			local reverse = (player.dir >= 0)
 			local gi = 1 + ((i - 1) * 2) + (reverse and 1 or 0)
-			local opacity = ghost.opacity
+			local opacity = ghost.opacity * math.min(1.0, 1.0 - math.abs(emudata[3].fade/16.0)) * (player.blink and 0.5 or 1.0)
 			if not reverse then
 				gui.gdoverlay(x-ox, y-oy, pose_data[ghost.gfx][gi], xi*dx, yi*dy, dx, dy, opacity)
 			else
