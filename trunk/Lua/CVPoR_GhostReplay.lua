@@ -5,7 +5,7 @@
 root_dir = ""
 
 -- Ghost definitions
-ghost_dumps  = { "PoR-Any%[1293M].ghost" }
+ghost_dumps  = { "[1293M].ghost" }
 
 -- Timing options
 sync_mode    = "realtime"
@@ -23,8 +23,46 @@ ghost_opacity = { 0.75 }
 ghost_gfx = 1 -- nil to turn off. Array to specify individually
 pose_info = { { { "jonadb.png", "jonadb-r.png"}, { "chardb.png", "chardb-r.png" }, 64, 64, 32, 56 } }
 
+-- Draw log dump for AviUtl
+drawlog = nil--io.open(root_dir .. "aviutl_guidraw.lua", "w") -- nil to turn off. File handle to dump.
+
 -- Main parameters end here
 if ghost_gfx then require "gd" end
+
+-- gui.gdoverlay with screen clipping
+gui.gdoverlayclip = function(...)
+	local arg = {...}
+	local index = 1
+	local x, y = 0, 0
+	local screentype = "bottom"
+
+	if type(arg[index]) == "string" and (arg[index] == "top" or arg[index] == "bottom" or arg[index] == "both") then
+		screentype = arg[index]
+		index = index + 1
+	end
+	if type(arg[index]) == "number" then
+		x, y = arg[index], arg[index+1]
+		index = index + 2
+	end
+	local gdStr = arg[index]
+	index = index + 1
+	local hasSrcRect = ((#arg - index + 1) > 1)
+	local sx, sy, sw, sh = 0, 0, 65535, 65535
+	if hasSrcRect then
+		sx, sy, sw, sh = arg[index], arg[index+1], arg[index+2], arg[index+3]
+		index = index + 4
+	end
+	local opacity = ((arg[index] ~= nil) and arg[index] or 1.0)
+
+	-- screen clip
+	if screentype == "top" then
+		if y+sh > 0 then sh = -y end
+	elseif screentype == "bottom" then
+		if y < 0 then sy, sh, y = sy - y, sh + y, 0 end
+	end
+
+	gui.gdoverlay(x, y, gdStr, sx, sy, sw, sh, opacity)
+end
 
 -- Variables that must be saved in savestates
 last_igframe = 0 -- Used to find out if this frame should be skipped
@@ -49,9 +87,14 @@ function main()
 		last_transition = { last_room, frame, igframe() }
 	end
 	last_room = room
+
+	if drawlog then
+		update_screen(true)
+		drawlog:write("\n")
+	end
 end
 
-function update_screen()
+function update_screen(logonly)
 	room = get_room()
 	for index, ghost in ipairs(ghosts) do repeat
 		-- Apparently, graphical updates come slightly later than memory updates.
@@ -61,7 +104,7 @@ function update_screen()
 		local osframe = offset(sframe, ghost)
 		local ogframe = osframe and sync2frame(osframe, ghost)
 		if(ogframe and room == ghost.data[ogframe].room) then
-			if ghost.gfx then draw_ghost_gfx(ghost, ogframe) end
+			if ghost.gfx then draw_ghost_gfx(ghost, ogframe, logonly) end
 		end
 	until true end
 end
@@ -398,7 +441,7 @@ function read_pose(info)
 	}
 end
 
-function draw_ghost_gfx(ghost,frame)
+function draw_ghost_gfx(ghost,frame,logonly)
 	if not ghost_gfx then return end
 	local data = ghost.data[frame]
 	if not data then return end
@@ -417,9 +460,17 @@ function draw_ghost_gfx(ghost,frame)
 			local gi = 1 + ((i - 1) * 2) + (reverse and 1 or 0)
 			local opacity = ghost.opacity * math.min(1.0, 1.0 - math.abs(emudata[3].fade/16.0)) * (player.blink and 0.5 or 1.0)
 			if not reverse then
-				gui.gdoverlay(x-ox, y-oy, pose_data[ghost.gfx][gi], xi*dx, yi*dy, dx, dy, opacity)
+				if logonly then
+					drawlog:write("IMGB("..tostring(x-ox)..","..tostring(y-oy)..",pose_data["..tostring(ghost.gfx).."]["..tostring(gi).."],"..tostring(xi*dx)..","..tostring(yi*dy)..","..tostring(dx)..","..tostring(dy)..","..tostring(opacity)..") ")
+				else
+					gui.gdoverlayclip("bottom", x-ox, y-oy, pose_data[ghost.gfx][gi], xi*dx, yi*dy, dx, dy, opacity)
+				end
 			else
-				gui.gdoverlay(x-ox, y-oy, pose_data[ghost.gfx][gi], (15-xi)*dx, yi*dy, dy, dx, opacity)
+				if logonly then
+					drawlog:write("IMGB("..tostring(x-ox)..","..tostring(y-oy)..",pose_data["..tostring(ghost.gfx).."]["..tostring(gi).."],"..tostring((15-xi)*dx)..","..tostring(yi*dy)..","..tostring(dx)..","..tostring(dy)..","..tostring(opacity)..") ")
+				else
+					gui.gdoverlayclip("bottom", x-ox, y-oy, pose_data[ghost.gfx][gi], (15-xi)*dx, yi*dy, dx, dy, opacity)
+				end
 			end
 		end
 	end
@@ -432,5 +483,9 @@ function draw_delay(ghost,delay, index)
 end
 
 -- End of definitions. Start running.
+
+emu.registerexit(function()
+	if drawlog ~= nil then drawlog:close() end
+end)
 
 init()
