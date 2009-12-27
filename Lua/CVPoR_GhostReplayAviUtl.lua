@@ -1,127 +1,214 @@
--- Castlevania - Portrait of Ruin
--- Ghost replay prototype for AviUtl
+-- wrapper for emulua gui functions for aviutl
+-- the easiest way to draw emulua overlays in avi
 
-require("gd")
-require("bit")
+-- a script to specify what to draw for each frame
+local drawcodefname = "drawcode.lua"
+-- example script:
+--[[
+	gui.pixel(50, 50) -- frame #1: draw a pixel
+	gui.pixel(50, 50) gui.box(20,20,80,80) -- frame #2: draw a pixel and a box
+	gui.pixel(51, 51) -- frame #3: draw a pixel
+	-- frame #4+: draw nothing
+]]
 
-copytable = function(t)
-	if t == nil then return nil end
-	local c = {}
-	for k,v in pairs(t) do
-		c[k] = v
-	end
-	setmetatable(c,debug.getmetatable(t))
-	return c
+if not aviutl then
+	error("This script runs under lua for aviutl.")
 end
 
-root_dir = ""
-ghost_files = { "0.ghost", "1.ghost" }
-ghost_trans = { 0, 0.75 }
-jo_gdpose, ch_gdpose = {}, {}
-jo_gdpose.l = gd.createFromPng(root_dir.."jonadb.png"):gdStr()
-jo_gdpose.r = gd.createFromPng(root_dir.."jonadb-r.png"):gdStr()
-ch_gdpose.l = gd.createFromPng(root_dir.."chardb.png"):gdStr()
-ch_gdpose.r = gd.createFromPng(root_dir.."chardb-r.png"):gdStr()
-
-ghost = {}
-for i, v in ipairs(ghost_files) do
-	io.input(root_dir..v)
-	ghost[i] = { data = {} }
-	local f = 1
-	while true do
-		local tmp = io.read("*n")
-		if tmp == nil then
-			break
-		end
-		local e = {}
-		e.igframe = tmp
-		e.mode = io.read("*n")
-		e.fade = io.read("*n")
-		e.world = io.read("*n")
-		e.roomx = io.read("*n")
-		e.roomy = io.read("*n")
-		e.camx = io.read("*n")
-		e.camy = io.read("*n")
-		e.jo_posx = io.read("*n")
-		e.jo_posy = io.read("*n")
-		e.jo_hitx1 = io.read("*n")
-		e.jo_hity1 = io.read("*n")
-		e.jo_hitx2 = io.read("*n")
-		e.jo_hity2 = io.read("*n")
-		e.jo_dir = io.read("*n")
-		e.jo_pose = io.read("*n")
-		e.jo_blink = (io.read("*n")~=0)
-		e.jo_visual = io.read("*n")
-		e.ch_posx = io.read("*n")
-		e.ch_posy = io.read("*n")
-		e.ch_hitx1 = io.read("*n")
-		e.ch_hity1 = io.read("*n")
-		e.ch_hitx2 = io.read("*n")
-		e.ch_hity2 = io.read("*n")
-		e.ch_dir = io.read("*n")
-		e.ch_pose = io.read("*n")
-		e.ch_blink = (io.read("*n")~=0)
-		e.ch_visual = io.read("*n")
-
-		e.jo_visible = (bit.band(e.jo_visual, 0x80)==0)
-		e.ch_visible = (bit.band(e.ch_visual, 0x80)==0)
-
-		table.insert(ghost[i].data, e)
-		f = f + 1
-	end
-	ghost[i].offset = 1
-end
-io.input(io.stdin)
-
-function func_proc()
-	local f = aviutl.get_frame() + 1
-	if f > #ghost[1].data then
-		return
-	end
-	local this = copytable(ghost[1].data[f])
-	this.fade = math.abs(this.fade)
-	if this.fade > 16 then this.fade = 16 end
-	this.fade = (16 - this.fade) / 16.0
-	-- this.jo_visible = (bit.band(this.jo_visual, 0x80)==0)
-	-- this.ch_visible = (bit.band(this.ch_visual, 0x80)==0)
-
-	local ycp_edit = aviutl.get_ycp_edit()
-
-	clientToScreen = function(x, y)
-		return math.floor((x - this.camx) / 0x1000), math.floor((y - this.camy) / 0x1000)
-	end
-
-	local drawpose = function(ycp, gdpose, x, y, n, reverse, opacity)
-		if opacity == nil then opacity = 1.0 end
-		local xi, yi = (n % 0x10), math.floor(n / 0x10)
-		if not reverse then
-			aviutl.gdoverlay(ycp, x - 32, y - 56 + 192, gdpose.l, xi * 64, yi * 64, 64, 64, math.floor(4096*(1.0-opacity)))
+-- emulua compatible gui functions
+gui = {
+opacityValue = 1.0,
+opacity = function(level)
+	gui.opacityValue = math.max(0.0, tonumber(level))
+end;
+transparency = function(trans)
+	gui.opacityValue = (4.0 - trans) / 4.0
+end;
+parsecolor = function(color)
+	if type(color) == "nil" then
+		return nil
+	elseif type(color) == "string" then
+		local name = color:lower()
+		if color:sub(1,1) == "#" then
+			local val = tonumber(color:sub(2), 16)
+			local missing = math.max(0, 9 - #color)
+			val = val * math.pow(2, missing * 4)
+			if missing >= 2 then val = val - (val%256) + 255 end
+			return math.floor(val/0x1000000)%256, math.floor(val/0x10000)%256, math.floor(val/0x100)%256, val%256
+		elseif name == "rand" then
+			return math.random(0,255), math.random(0,255), math.random(0,255), 255
 		else
-			aviutl.gdoverlay(ycp, x - 32, y - 56 + 192, gdpose.r, (15 - xi) * 64, yi * 64, 64, 64, math.floor(4096*(1.0-opacity)))
-		end
-	end
-
-	if this.mode ~= 2 or this.fade == 0 then
-		return
-	end
-
-	for i = 1, #ghost do
-		ghost[i].offset = f
-		if ghost[i].offset <= #ghost[i].data then
-			local e = ghost[i].data[ghost[i].offset]
-			if e.mode == 2 and (this.world == e.world and this.roomx == e.roomx and this.roomy == e.roomy) then
-				local jo_posx, jo_posy = clientToScreen(e.jo_posx, e.jo_posy)
-				local ch_posx, ch_posy = clientToScreen(e.ch_posx, e.ch_posy)
-				if e.jo_visible then
-					drawpose(ycp_edit, jo_gdpose, jo_posx, jo_posy, e.jo_pose, e.jo_dir >= 0, ghost_trans[i] * this.fade * (e.jo_blink and 0.5 or 1.0))
-				end
-				if e.ch_visible then
-					drawpose(ycp_edit, ch_gdpose, ch_posx, ch_posy, e.ch_pose, e.ch_dir >= 0, ghost_trans[i] * this.fade * (e.ch_blink and 0.5 or 1.0))
+			local s_colorMapping = {
+				{ "white",     255, 255, 255, 255 },
+				{ "black",       0,   0,   0, 255 },
+				{ "clear",       0,   0,   0,   0 },
+				{ "gray",      127, 127, 127, 255 },
+				{ "grey",      127, 127, 127, 255 },
+				{ "red",       255,   0,   0, 255 },
+				{ "orange",    255, 127,   0, 255 },
+				{ "yellow",    255, 255,   0, 255 },
+				{ "chartreuse",127, 255,   0, 255 },
+				{ "green",       0, 255,   0, 255 },
+				{ "teal",        0, 255, 127, 255 },
+				{ "cyan" ,       0, 255, 255, 255 },
+				{ "blue",        0,   0, 255, 255 },
+				{ "purple",    127,   0, 255, 255 },
+				{ "magenta",   255,   0, 255, 255 }
+			}
+			for i, e in ipairs(s_colorMapping) do
+				if name == e[1] then
+					return e[2], e[3], e[4], e[5]
 				end
 			end
+			error("unknown color " .. color)
+		end
+	elseif type(color) == "number" then
+		return math.floor(color/0x1000000)%256, math.floor(color/0x10000)%256, math.floor(color/0x100)%256, color%256
+	elseif type(color) == "table" then
+		local r, g, b, a = 0, 0, 0, 255
+		for k, v in pairs(color) do
+			if k == 1 or k == "r" then
+				r = v
+			elseif k == 2 or k == "g" then
+				g = v
+			elseif k == 3 or k == "b" then
+				b = v
+			elseif k == 4 or k == "a" then
+				a = v
+			end
+		end
+		return r, g, b, a
+	elseif type(color) == "function" then
+		error("color function is not supported")
+	else
+		error("unknown color " .. tostring(color))
+	end
+end;
+getpixel = function(x,y)
+	local yv, cb, cr = aviutl.get_pixel(aviutl.get_ycp_edit(), x, y)
+	return aviutl.yc2rgb(yv, cb, cr)
+end;
+text = function(x,y,str,color,outlinecolor)
+	if color == nil then color = "white" end
+	if outlinecolor == nil then outlinecolor = "black" end
+	local drawtext = function(x,y,str,color)
+		local r, g, b, a = gui.parsecolor(color)
+		local yv, cb, cr = aviutl.rgb2yc(r, g, b)
+		local av = math.floor((1.0-(a/255.0 * gui.opacityValue)) * 4096)
+		av = math.max(0, math.min(4096, av))
+		aviutl.draw_text(aviutl.get_ycp_edit(), x, y, str, r, g, b, av, "Arial", 12)
+	end
+	-- FIXME: transparent text
+	drawtext(x-1,y-1,str,outlinecolor)
+	drawtext(x+1,y-1,str,outlinecolor)
+	drawtext(x-1,y+1,str,outlinecolor)
+	drawtext(x+1,y+1,str,outlinecolor)
+	drawtext(x,y,str,color)
+end;
+box = function(x1,y1,x2,y2,fillcolor,outlinecolor)
+	if x1 > x2 then x1, x2 = x2, x1 end
+	if y1 > y2 then y1, y2 = y2, y1 end
+
+	if fillcolor == nil then fillcolor = { 255, 255, 255, 63 } end
+	local rf, gf, bf, af = gui.parsecolor(fillcolor)
+	local yvf, cbf, crf = aviutl.rgb2yc(rf, gf, bf)
+	local avf = math.floor((1.0-(af/255.0 * gui.opacityValue)) * 4096)
+	avf = math.max(0, math.min(4096, avf))
+	if outlinecolor == nil then outlinecolor = { rf, gf, bf, 255 } end
+	local ro, go, bo, ao = gui.parsecolor(outlinecolor)
+	local yvo, cbo, cro = aviutl.rgb2yc(ro, go, bo)
+	local avo = math.floor((1.0-(ao/255.0 * gui.opacityValue)) * 4096)
+	avo = math.max(0, math.min(4096, avo))
+
+	local ycp_edit = aviutl.get_ycp_edit()
+	aviutl.line(ycp_edit, x1, y1, x2, y1, yvo, cbo, cro, avo)
+	if y1 ~= y2 then
+		-- FIXME: workaround: aviutl.line doesn't draw the last pixel of vertical line
+		aviutl.line(ycp_edit, x1, y1+1, x1, y2+1, yvo, cbo, cro, avo)
+		if x1 ~= x2 then
+			aviutl.line(ycp_edit, x2, y1+1, x2, y2+1, yvo, cbo, cro, avo)
+			aviutl.line(ycp_edit, x1+1, y2, x2-1, y2, yvo, cbo, cro, avo)
 		end
 	end
+	if (x2 - x1 >= 2) and (y2 - y1 >= 2) then
+		aviutl.box(ycp_edit, x1+1, y1+1, x2-1, y2-1, yvf, cbf, crf, avf)
+	end
+end;
+line = function(x1,y1,x2,y2,color,skipfirst) -- NYI: skipfirst
+	if color == nil then color = "white" end
+	local r, g, b, a = gui.parsecolor(color)
+	local yv, cb, cr = aviutl.rgb2yc(r, g, b)
+	local av = math.floor((1.0-(a/255.0 * gui.opacityValue)) * 4096)
+	av = math.max(0, math.min(4096, av))
+	aviutl.line(aviutl.get_ycp_edit(), x1, y1, x2, y2, yv, cb, cr, av)
+end;
+pixel = function(x,y,color)
+	if color == nil then color = "white" end
+	local r, g, b, a = gui.parsecolor(color)
+	local yv, cb, cr = aviutl.rgb2yc(r, g, b)
+	local av = math.floor((1.0-(a/255.0 * gui.opacityValue)) * 4096)
+	av = math.max(0, math.min(4096, av))
+	aviutl.set_pixel(aviutl.get_ycp_edit(), x, y, yv, cb, cr, av)
+end;
+gdoverlay = function(...)
+	local arg = {...}
+	local index = 1
+	local x, y = 0, 0
+	if type(arg[index]) == "number" then
+		x, y = arg[index], arg[index+1]
+		index = index + 2
+	end
+	local gdStr = arg[index]
+	index = index + 1
+	local hasSrcRect = ((#arg - index + 1) > 1)
+	local sx, sy, sw, sh = 0, 0, 0, 0
+	if hasSrcRect then
+		sx, sy, sw, sh = arg[index], arg[index+1], arg[index+2], arg[index+3]
+		index = index + 4
+	end
+	local av = ((arg[index] ~= nil) and arg[index] or 1.0)
+	av = math.floor((1.0-(av * gui.opacityValue)) * 4096)
+	av = math.max(0, math.min(4096, av))
+	if hasSrcRect then
+		aviutl.gdoverlay(aviutl.get_ycp_edit(), x, y, gdStr, sx, sy, sw, sh, av)
+	else
+		aviutl.gdoverlay(aviutl.get_ycp_edit(), x, y, gdStr, av)
+	end
+end
+}
+-- alternative names
+gui.readpixel = gui.getpixel
+gui.drawtext = gui.text
+gui.drawbox = gui.box
+gui.rect = gui.box
+gui.drawrect = gui.box
+gui.drawline = gui.line
+gui.setpixel = gui.pixel
+gui.drawpixel = gui.pixel
+gui.writepixel = gui.pixel
+gui.drawimage = gui.gdoverlay
+gui.image = gui.gdoverlay
+
+-- load draw script
+function load_drawcode(filename)
+	local f = 1
+	local drawcode = {}
+
+	-- compile each line
+	for line in io.lines(filename) do
+		drawcode[f] = assert(loadstring(line))
+		f = f + 1
+	end
+	return drawcode
+end
+drawcode = load_drawcode(drawcodefname)
+
+-- aviutl: process a frame
+function func_proc()
+	local f = aviutl.get_frame() + 1
+	if drawcode[f] then drawcode[f]() end
 end
 
+-- aviutl: finalize script
 function func_exit()
 end
