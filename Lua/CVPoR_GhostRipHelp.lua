@@ -66,7 +66,7 @@ gui.register(function()
 		gui.text(164, 30, string.format("J: %d, %d", (jo_spr%0x10)*64, math.floor(jo_spr/0x10)*64))
 	end
 	if ch_visible then
-		gui.text(164, 40, string.format("C: %d %04X", memory.readbyte(0x020fcd02), ch_spr))
+		gui.text(164, 40, string.format("C: %d %04X", memory.readbyte(0x020fcc62), ch_spr))
 		gui.text(164, 50, string.format("C: %d, %d", (ch_spr%0x10)*64, math.floor(ch_spr/0x10)*64))
 	end
 	if memory.readbyte(0x020f6284) ~= 2 then
