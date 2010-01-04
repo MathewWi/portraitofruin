@@ -1,7 +1,7 @@
 -- Castlevania: Portrait of Ruin
 -- Simple RAM Display (good for livestreaming!)
 
-gui.opacity(0.68)
+local opacityMaster = 0.68
 gui.register(function()
 	local frame = emu.framecount()
 	local lagframe = emu.lagcount()
@@ -22,25 +22,37 @@ gui.register(function()
 	local ch_mptimer = memory.readword(0x020fcbf8)
 	local mp = memory.readword(0x02112170)
 	local change_cooldown = memory.readdwordsigned(0x021115fc)
+	local mode = memory.readbyte(0x020f6284)
+	local fade = math.min(1.0, 1.0 - math.abs(memory.readbytesigned(0x020f61fc)/16.0))
 
 	moviemode = movie.mode()
 	if not movie.active() then moviemode = "" end
-	gui.text(1, 26, string.format("%d/%d%s\n%d\n\nJ(%6d,%6d) %d %04X\nC(%6d,%6d) %d %04X\nMP:%3d | %d",
+
+	gui.opacity(opacityMaster)
+	gui.text(1, 26, string.format("%d/%d%s\n%d",
 		frame, igframe,
 		(moviemode ~= "" and string.format(" (%s)", moviemode) or ""),
-		lagframe,
-		jo_vx, jo_vy, jo_inv, jo_mptimer,
-		ch_vx, ch_vy, ch_inv, ch_mptimer,
-		mp, change_cooldown
+		lagframe
 	))
 
-	local base = 0x02100da8
-	local dispy = 26
-	for i = 0, 15 do
-		if memory.readword(base) > 0 then -- hp
-			gui.text(171, dispy, string.format("%X %03d %08X", i, memory.readword(base), memory.readdword(base-0xf8)))
-			dispy = dispy + 10
+	if mode == 2 then
+		gui.opacity(opacityMaster * (fade/2 + 0.5))
+
+		gui.text(1, 56, string.format("J(%6d,%6d) %d %04X\nC(%6d,%6d) %d %04X\nMP:%3d | %d",
+			jo_vx, jo_vy, jo_inv, jo_mptimer,
+			ch_vx, ch_vy, ch_inv, ch_mptimer,
+			mp, change_cooldown
+		))
+
+		-- enemy info
+		local base = 0x02100da8
+		local dispy = 26
+		for i = 0, 15 do
+			if memory.readword(base) > 0 then -- hp
+				gui.text(171, dispy, string.format("%X %03d %08X", i, memory.readword(base), memory.readdword(base-0xf8)))
+				dispy = dispy + 10
+			end
+			base = base + 0x160
 		end
-		base = base + 0x160
 	end
 end)
