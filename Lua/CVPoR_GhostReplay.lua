@@ -96,7 +96,8 @@ end
 
 function update_screen(logonly)
 	room = get_room()
-	for index, ghost in ipairs(ghosts) do repeat
+	-- for index, ghost in ipairs(ghosts) do repeat
+	for index = #ghosts, 1, -1 do ghost = ghosts[index] repeat
 		-- Apparently, graphical updates come slightly later than memory updates.
 		-- Therefore, fix the timing by tweaking the framecount manually:
 		local sframe  = syncframe()-1
@@ -433,12 +434,17 @@ function find_transition(ghost, from, to, near_sync)
 end
 
 function read_pose(info)
-	return {
-		gd.createFromPng(root_dir .. info[1][1]):gdStr(),
-		gd.createFromPng(root_dir .. info[1][2]):gdStr(),
-		gd.createFromPng(root_dir .. info[2][1]):gdStr(),
-		gd.createFromPng(root_dir .. info[2][2]):gdStr()
-	}
+	local im11 = gd.createFromPng(root_dir .. info[1][1])
+	local im12 = gd.createFromPng(root_dir .. info[1][2])
+	local im21 = gd.createFromPng(root_dir .. info[2][1])
+	local im22 = gd.createFromPng(root_dir .. info[2][2])
+
+	if im11 == nil then error("Cannot load image: " .. info[1][1]) end
+	if im12 == nil then error("Cannot load image: " .. info[1][2]) end
+	if im21 == nil then error("Cannot load image: " .. info[2][1]) end
+	if im22 == nil then error("Cannot load image: " .. info[2][2]) end
+
+	return { im11:gdStr(), im12:gdStr(), im21:gdStr(), im22:gdStr() }
 end
 
 function draw_ghost_gfx(ghost,frame,logonly)
