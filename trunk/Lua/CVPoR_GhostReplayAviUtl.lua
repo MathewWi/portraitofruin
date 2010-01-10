@@ -240,12 +240,17 @@ IMGB = function(...) gui.gdoverlayclip("bottom", ...) end
 
 -- load pose data
 function read_pose(info)
-	return {
-		gd.createFromPng(root_dir .. info[1][1]):gdStr(),
-		gd.createFromPng(root_dir .. info[1][2]):gdStr(),
-		gd.createFromPng(root_dir .. info[2][1]):gdStr(),
-		gd.createFromPng(root_dir .. info[2][2]):gdStr()
-	}
+	local im11 = gd.createFromPng(root_dir .. info[1][1])
+	local im12 = gd.createFromPng(root_dir .. info[1][2])
+	local im21 = gd.createFromPng(root_dir .. info[2][1])
+	local im22 = gd.createFromPng(root_dir .. info[2][2])
+
+	if im11 == nil then error("Cannot load image: " .. info[1][1]) end
+	if im12 == nil then error("Cannot load image: " .. info[1][2]) end
+	if im21 == nil then error("Cannot load image: " .. info[2][1]) end
+	if im22 == nil then error("Cannot load image: " .. info[2][2]) end
+
+	return { im11:gdStr(), im12:gdStr(), im21:gdStr(), im22:gdStr() }
 end
 pose_data = {}
 for i,info in ipairs(pose_info) do
