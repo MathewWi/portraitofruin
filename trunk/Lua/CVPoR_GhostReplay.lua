@@ -21,7 +21,7 @@ ghost_opacity = { 0.75 }
 
 -- These require gd
 ghost_gfx = 1 -- nil to turn off. Array to specify individually
-pose_info = { { { "jonadb.png", "jonadb-r.png"}, { "chardb.png", "chardb-r.png" }, 64, 64, 32, 56 } }
+pose_info = { { "jonadb.png", "chardb.png", 96, 64, 48, 56 } }
 
 -- Draw log dump for AviUtl
 drawlog = nil--io.open(root_dir .. "aviutl_guidraw.lua", "w") -- nil to turn off. File handle to dump.
@@ -96,6 +96,40 @@ gd.convertToTrueColor = function(imsrc)
 	im:copy(imsrc, 0, 0, 0, 0, im:sizeX(), im:sizeY())
 	im:alphaBlending(true) -- TODO: set the mode which imsrc uses
 
+	return im
+end
+-- flip an image about the vertical axis
+gd.flipVertical = function(im)
+	if im == nil then return nil end
+	im:alphaBlending(false)
+	for x = 0, im:sizeX() do
+		for y = 0, math.floor(im:sizeY()/2) do
+			local ct, cb = im:getPixel(x, y), im:getPixel(x, im:sizeY()-1-y)
+			im:setPixel(x, y, cb)
+			im:setPixel(im:sizeX()-1-x, y, ct)
+		end
+	end
+	im:alphaBlending(true) -- TODO: restore the mode
+	return im
+end
+-- flip an image about the horizontal axis
+gd.flipHorizontal = function(im)
+	if im == nil then return nil end
+	im:alphaBlending(false)
+	for y = 0, im:sizeY() do
+		for x = 0, math.floor(im:sizeX()/2) do
+			local cl, cr = im:getPixel(x, y), im:getPixel(im:sizeX()-1-x, y)
+			im:setPixel(x, y, cr)
+			im:setPixel(im:sizeX()-1-x, y, cl)
+		end
+	end
+	im:alphaBlending(true) -- TODO: restore the mode
+	return im
+end
+-- applies vertical and horizontal flip
+gd.flipBoth = function(im)
+	gd.flipVertical(im)
+	gd.flipHorizontal(im)
 	return im
 end
 
@@ -469,17 +503,18 @@ function find_transition(ghost, from, to, near_sync)
 end
 
 function read_pose(info)
-	local im11 = gd.createFromPng(root_dir .. info[1][1])
-	local im12 = gd.createFromPng(root_dir .. info[1][2])
-	local im21 = gd.createFromPng(root_dir .. info[2][1])
-	local im22 = gd.createFromPng(root_dir .. info[2][2])
+	local im1 = gd.convertToTrueColor(gd.createFromPng(root_dir .. info[1]))
+	local im2 = gd.convertToTrueColor(gd.createFromPng(root_dir .. info[2]))
 
-	if im11 == nil then error("Cannot load image: " .. info[1][1]) end
-	if im12 == nil then error("Cannot load image: " .. info[1][2]) end
-	if im21 == nil then error("Cannot load image: " .. info[2][1]) end
-	if im22 == nil then error("Cannot load image: " .. info[2][2]) end
+	if im1 == nil then error("Cannot load image: " .. info[1]) end
+	if im2 == nil then error("Cannot load image: " .. info[2]) end
 
-	return { im11:gdStr(), im12:gdStr(), im21:gdStr(), im22:gdStr() }
+	local im1rev = gd.convertToTrueColor(gd.createFromPng(root_dir .. info[1]))
+	local im2rev = gd.convertToTrueColor(gd.createFromPng(root_dir .. info[2]))
+	gd.flipHorizontal(im1rev)
+	gd.flipHorizontal(im2rev)
+
+	return { im1:gdStr(), im1rev:gdStr(), im2:gdStr(), im2rev:gdStr() }
 end
 
 function draw_ghost_gfx(ghost,frame,logonly)

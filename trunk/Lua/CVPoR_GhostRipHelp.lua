@@ -3,6 +3,8 @@ require("gd")
 if not bit then require("bit") end
 
 root = ""
+sprw, sprh, sprox, sproy = 96, 64, 48, 56
+jogf, chgf = "jonadb.png", "chardb.png"
 
 -- return if an image is a truecolor one
 gd.isTrueColor = function(im)
@@ -38,27 +40,61 @@ gd.convertToTrueColor = function(imsrc)
 
 	return im
 end
+-- flip an image about the vertical axis
+gd.flipVertical = function(im)
+	if im == nil then return nil end
+	im:alphaBlending(false)
+	for x = 0, im:sizeX() do
+		for y = 0, math.floor(im:sizeY()/2) do
+			local ct, cb = im:getPixel(x, y), im:getPixel(x, im:sizeY()-1-y)
+			im:setPixel(x, y, cb)
+			im:setPixel(im:sizeX()-1-x, y, ct)
+		end
+	end
+	im:alphaBlending(true) -- TODO: restore the mode
+	return im
+end
+-- flip an image about the horizontal axis
+gd.flipHorizontal = function(im)
+	if im == nil then return nil end
+	im:alphaBlending(false)
+	for y = 0, im:sizeY() do
+		for x = 0, math.floor(im:sizeX()/2) do
+			local cl, cr = im:getPixel(x, y), im:getPixel(im:sizeX()-1-x, y)
+			im:setPixel(x, y, cr)
+			im:setPixel(im:sizeX()-1-x, y, cl)
+		end
+	end
+	im:alphaBlending(true) -- TODO: restore the mode
+	return im
+end
+-- applies vertical and horizontal flip
+gd.flipBoth = function(im)
+	gd.flipVertical(im)
+	gd.flipHorizontal(im)
+	return im
+end
 
-jogl = gd.createFromPng(root.."jonadb.png"):gdStr()
-jogr = gd.createFromPng(root.."jonadb-r.png"):gdStr()
-chgl = gd.createFromPng(root.."chardb.png"):gdStr()
-chgr = gd.createFromPng(root.."chardb-r.png"):gdStr()
+jogl = gd.createFromPng(root..jogf):gdStr()
+jogr = gd.flipHorizontal(gd.createFromPng(root..jogf)):gdStr()
+chgl = gd.createFromPng(root..chgf):gdStr()
+chgr = gd.flipHorizontal(gd.createFromPng(root..chgf)):gdStr()
 
 function joDrawSprite(x, y, n, reverse)
 	local xi, yi = (n % 0x10), math.floor(n / 0x10)
 	if not reverse then
-		gui.gdoverlay(x, y, jogl, xi * 64, yi * 64, 64, 64)
+		gui.gdoverlay(x, y, jogl, xi * sprw, yi * sprh, sprw, sprh)
 	else
-		gui.gdoverlay(x, y, jogr, (15 - xi) * 64, yi * 64, 64, 64)
+		gui.gdoverlay(x, y, jogr, (15 - xi) * sprw, yi * sprh, sprw, sprh)
 	end
 end
 
 function chDrawSprite(x, y, n, reverse)
 	local xi, yi = (n % 0x10), math.floor(n / 0x10)
 	if not reverse then
-		gui.gdoverlay(x, y, chgl, xi * 64, yi * 64, 64, 64)
+		gui.gdoverlay(x, y, chgl, xi * sprw, yi * sprh, sprw, sprh)
 	else
-		gui.gdoverlay(x, y, chgr, (15 - xi) * 64, yi * 64, 64, 64)
+		gui.gdoverlay(x, y, chgr, (15 - xi) * sprw, yi * sprh, sprw, sprh)
 	end
 end
 
@@ -99,11 +135,11 @@ gui.register(function()
 	gui.text(164, 10, string.format("area: %d %d %d", area, room_x, room_y))
 	if jo_visible then
 		gui.text(164, 20, string.format("J: %d %04X", memory.readbyte(0x020fcb02), jo_spr))
-		gui.text(164, 30, string.format("J: %d, %d", (jo_spr%0x10)*64, math.floor(jo_spr/0x10)*64))
+		gui.text(164, 30, string.format("J: %d, %d", (jo_spr%0x10)*sprw, math.floor(jo_spr/0x10)*sprh))
 	end
 	if ch_visible then
 		gui.text(164, 40, string.format("C: %d %04X", memory.readbyte(0x020fcc62), ch_spr))
-		gui.text(164, 50, string.format("C: %d, %d", (ch_spr%0x10)*64, math.floor(ch_spr/0x10)*64))
+		gui.text(164, 50, string.format("C: %d, %d", (ch_spr%0x10)*sprw, math.floor(ch_spr/0x10)*sprh))
 	end
 	if memory.readbyte(0x020f6284) ~= 2 then
 		return
@@ -113,23 +149,21 @@ gui.register(function()
 	fade = (16 - fade) / 16.0
 	if jo_visible then
 		gui.opacity(0.68*1 * fade)
-		joDrawSprite( 64 + jo_x - camx - 32, jo_y - camy - 48 - 8, jo_spr, jo_dir >= 0)
-		joDrawSprite(-64 + jo_x - camx - 32, jo_y - camy - 48 - 8, jo_spr, jo_dir < 0)
-gui.opacity(1.0*0 * fade)
-joDrawSprite( 0 + jo_x - camx - 32, jo_y - camy - 48 - 8, jo_spr, jo_dir >= 0)
+		joDrawSprite( sprw + jo_x - camx - sprox, jo_y - camy - sproy, jo_spr, jo_dir >= 0)
+		joDrawSprite(-sprw + jo_x - camx - sprox, jo_y - camy - sproy, jo_spr, jo_dir < 0)
 
 		gui.opacity(1 * fade)
-		gui.box(jo_x - camx - 32, jo_y - camy - 48 - 8, jo_x - camx + 31, jo_y - camy + 15 - 8, "clear", "#ff000080")
+		gui.box(jo_x - camx - sprox, jo_y - camy - sproy, jo_x - camx - sprox + sprw - 1, jo_y - camy - sproy + sprh - 1, "clear", "#ff000080")
 		-- gui.box(jo_hitx1 - camx, jo_hity1 - camy, jo_hitx2 - camx, jo_hity2 - camy, "clear", "green")
 		gui.opacity(1 * fade)
 	end
 	if ch_visible then
 		gui.opacity(0.68*1 * fade)
-		chDrawSprite( 64 + ch_x - camx - 32, ch_y - camy - 48 - 8, ch_spr, ch_dir >= 0)
-		chDrawSprite(-64 + ch_x - camx - 32, ch_y - camy - 48 - 8, ch_spr, ch_dir < 0)
+		chDrawSprite( sprw + ch_x - camx - sprox, ch_y - camy - sproy, ch_spr, ch_dir >= 0)
+		chDrawSprite(-sprw + ch_x - camx - sprox, ch_y - camy - sproy, ch_spr, ch_dir < 0)
 
 		gui.opacity(1 * fade)
-		gui.box(ch_x - camx - 32, ch_y - camy - 48 - 8, ch_x - camx + 31, ch_y - camy + 15 - 8, "clear", "#ff000080")
+		gui.box(ch_x - camx - sprox, ch_y - camy - sproy, ch_x - camx - sprox + sprw - 1, ch_y - camy - sproy + sprh - 1, "clear", "#ff000080")
 		-- gui.box(ch_hitx1 - camx, ch_hity1 - camy, ch_hitx2 - camx, ch_hity2 - camy, "clear", "green")
 		gui.opacity(1 * fade)
 	end
