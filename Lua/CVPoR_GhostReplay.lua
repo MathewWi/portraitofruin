@@ -21,7 +21,7 @@ ghost_opacity = { 0.75 }
 
 -- These require gd
 ghost_gfx = 1 -- nil to turn off. Array to specify individually
-pose_info = { { "jonadb.png", "chardb.png", 128, 64, 64, 56 } }
+pose_info = { { "jonadb.png", "chardb.png", 128, 128, 64, 120 } }
 
 -- Draw log dump for AviUtl
 drawlog = nil--io.open(root_dir .. "aviutl_guidraw.lua", "w") -- nil to turn off. File handle to dump.
