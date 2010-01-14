@@ -3,7 +3,7 @@ require("gd")
 if not bit then require("bit") end
 
 root = ""
-sprw, sprh, sprox, sproy = 128, 64, 64, 56
+sprw, sprh, sprox, sproy = 128, 128, 64, 120
 jogf, chgf = "richdb.png", "mariadb.png"
 
 -- return if an image is a truecolor one
