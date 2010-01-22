@@ -1,5 +1,5 @@
 
-23
+27
 00000	020F627C	d	h	0	RNG
 00001	020F6274	d	h	0	RNG #2
 00002	020F6270	d	u	0	Count for RNG
@@ -23,3 +23,7 @@
 00014	020FCB45	b	u	0	Jonathan invulnerability
 00015	020FCCA5	b	u	0	Charotte invulnerability
 00016	021115FC	d	u	0	Change Cube cooldown
+00017	0211177C	w	u	0	Room position X for Suspend
+00018	02111780	w	u	0	Room position Y for Suspend
+00019	021119BC	d	h	0	X position for Suspend
+0001A	021119C0	d	h	0	Y position for Suspend
