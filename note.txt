@@ -70,3 +70,5 @@ x + 77*3 = x + 231 (x >= 9)
 
 42 + 35*2 + 24*7 + 3000 + 35*3 + 77*2 = 3539
 <del>Considering level up screen, Lv.9 might be faster?</del> No, I think it doesn't after all.
+
+Astarte Invulnerability: 02100ea2+
