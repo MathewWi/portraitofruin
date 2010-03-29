@@ -1,5 +1,5 @@
 
-29
+30
 00000	020F627C	d	h	0	RNG
 00001	020F6274	d	h	0	RNG #2
 00002	020F6270	d	u	0	Count for RNG
@@ -29,3 +29,4 @@
 0001A	021119C0	d	h	0	Y position for Suspend
 0001B	020FCB8E	b	u	0	Jonathan Jump Count
 0001C	020FCCEE	b	u	0	Charlotte Jump Count
+0001D	020FCCCA	w	u	0	Spell-casting timer
