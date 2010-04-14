@@ -50,14 +50,14 @@ gui.register(function()
 		))
 
 		-- enemy info
-		local base = 0x02100988
+		local basead = 0x02100988
 		local dispy = 26
 		for i = 0, 19 do
+			local base = basead + i * 0x160
 			if memory.readword(base) > 0 and memory.readbyte(base-8) ~= 0 then -- hp
 				gui.text(171, dispy, string.format("%X %03d %08X", i, memory.readword(base), memory.readdword(base-0xf8)))
 				dispy = dispy + 10
 			end
-			base = base + 0x160
 		end
 	end
 end)
