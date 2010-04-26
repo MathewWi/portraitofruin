@@ -5,19 +5,19 @@
 root_dir = ""
 
 -- Ghost definitions
-ghost_dumps  = { "[1293M].ghost" }
+ghost_dumps  = { "[1437M].ghost", "[1293M].ghost" }
 
 -- Timing options
-sync_mode    = "realtime"
+sync_mode    = "ingame"
 display_mode = "ingame" -- NYI
 offset_mode  = "room"
 
-show_delays = true -- NYI
+show_delays = true
 
 -- Graphics options
 own_color = "white"
-ghost_color = { "red" }
-ghost_opacity = { 0.75 }
+ghost_color = { "red", "blue" }
+ghost_opacity = 0.75
 
 -- These require gd
 ghost_gfx = 1 -- nil to turn off. Array to specify individually
@@ -103,10 +103,10 @@ gd.flipVertical = function(im)
 	if im == nil then return nil end
 	im:alphaBlending(false)
 	for x = 0, im:sizeX() do
-		for y = 0, math.floor(im:sizeY()/2) - 1 do
-			local c1, c2 = im:getPixel(x, y), im:getPixel(x, im:sizeY()-1-y)
-			im:setPixel(x, y, c2)
-			im:setPixel(im:sizeX()-1-x, y, c1)
+		for y = 0, math.floor(im:sizeY()/2) do
+			local ct, cb = im:getPixel(x, y), im:getPixel(x, im:sizeY()-1-y)
+			im:setPixel(x, y, cb)
+			im:setPixel(im:sizeX()-1-x, y, ct)
 		end
 	end
 	im:alphaBlending(true) -- TODO: restore the mode
@@ -117,10 +117,10 @@ gd.flipHorizontal = function(im)
 	if im == nil then return nil end
 	im:alphaBlending(false)
 	for y = 0, im:sizeY() do
-		for x = 0, math.floor(im:sizeX()/2) - 1 do
-			local c1, c2 = im:getPixel(x, y), im:getPixel(im:sizeX()-1-x, y)
-			im:setPixel(x, y, c2)
-			im:setPixel(im:sizeX()-1-x, y, c1)
+		for x = 0, math.floor(im:sizeX()/2) do
+			local cl, cr = im:getPixel(x, y), im:getPixel(im:sizeX()-1-x, y)
+			im:setPixel(x, y, cr)
+			im:setPixel(im:sizeX()-1-x, y, cl)
 		end
 	end
 	im:alphaBlending(true) -- TODO: restore the mode
@@ -167,15 +167,15 @@ function update_screen(logonly)
 	room = get_room()
 	-- for index, ghost in ipairs(ghosts) do repeat
 	for index = #ghosts, 1, -1 do ghost = ghosts[index] repeat
-		-- Apparently, graphical updates come slightly later than memory updates.
-		-- Therefore, fix the timing by tweaking the framecount manually:
-		local sframe  = syncframe()-1
+		local sframe  = syncframe()
 		local gframe  = sync2frame(sframe, ghost)
 		local osframe = offset(sframe, ghost)
 		local ogframe = osframe and sync2frame(osframe, ghost)
+
 		if(ogframe and room == ghost.data[ogframe].room) then
-			if ghost.gfx then draw_ghost_gfx(ghost, ogframe, logonly) end
+			if ghost.gfx then draw_ghost_gfx(ghost, ogframe, index, logonly) end
 		end
+		if show_delays and osframe then draw_delay(ghost,osframe-sframe, index) end
 	until true end
 end
 
@@ -441,10 +441,24 @@ end
 function build_sync(ghost)
 	local res = {}
 	local last = 0
+	local lastframe = 1
 	for i = 1, nframe(ghost) do
-		if frame2sync(i, ghost) ~= last then
-			table.insert(res,i)
+		-- HACK: actually, igframe sometimes decreased by reset,
+		-- and sometimes increased by 2 due to mysterious lags.
+		-- so we do something weird here to prevent desyncs :P
+		local diff = frame2sync(i, ghost) - last
+		if diff > 0 then
+			if diff < 4 then -- if differences are small enough
+				-- duplicate the nearest frame
+				for j = 1, diff - 1 do
+					table.insert(res,lastframe)
+				end
+				table.insert(res,i)
+			else
+				table.insert(res,i)
+			end
 			last = frame2sync(i,ghost)
+			lastframe = i
 		end
 	end
 	return res
@@ -517,10 +531,26 @@ function read_pose(info)
 	return { im1:gdStr(), im1rev:gdStr(), im2:gdStr(), im2rev:gdStr() }
 end
 
-function draw_ghost_gfx(ghost,frame,logonly)
+function draw_ghost_gfx(ghost,frame,index,logonly)
 	if not ghost_gfx then return end
-	local data = ghost.data[frame]
+
+	local displayDelay = 2
+	local frameAdjusted = frame - displayDelay
+	local adjusted = false
+	while frameAdjusted >= 1 and (frame - frameAdjusted < displayDelay * 4) do
+		if ghost.data[frameAdjusted].igframe + displayDelay == ghost.data[frame].igframe then
+			adjusted = true
+			break
+		end
+		frameAdjusted = frameAdjusted - 1
+	end
+	if not adjusted then
+		return
+	end
+
+	local data = ghost.data[frameAdjusted]
 	if not data then return end
+
 	if emudata[1].mode ~= 2 then return end
 
 	local scrollx, scrolly = emudata[3].scrollx, emudata[3].scrolly
@@ -528,34 +558,42 @@ function draw_ghost_gfx(ghost,frame,logonly)
 	local ox, oy = pose_info[ghost.gfx][5], pose_info[ghost.gfx][6]
 	local players = { data.jonathan, data.charlotte }
 	for i, player in ipairs(players) do
-		local x, y = math.floor((player.posx - scrollx) / 0x1000), math.floor((player.posy - scrolly) / 0x1000)
-		-- if player.offscreen then x, y = (256-64)/2 + ox, (192-64)/2 + oy end
-		if player.visible then
-			local xi, yi = player.pose % 0x10, math.floor(player.pose / 0x10)
-			local reverse = (player.dir >= 0)
-			local gi = 1 + ((i - 1) * 2) + (reverse and 1 or 0)
-			local opacity = ghost.opacity * math.min(1.0, 1.0 - math.abs(emudata[3].fade/16.0)) * (player.blink and 0.5 or 1.0)
-			if not reverse then
-				if logonly then
-					drawlog:write("IMGB("..tostring(x-ox)..","..tostring(y-oy)..",pose_data["..tostring(ghost.gfx).."]["..tostring(gi).."],"..tostring(xi*dx)..","..tostring(yi*dy)..","..tostring(dx)..","..tostring(dy)..","..tostring(opacity)..") ")
+		local put = function(x, y)
+			if player.visible then
+				local xi, yi = player.pose % 0x10, math.floor(player.pose / 0x10)
+				local reverse = (player.dir >= 0)
+				local gi = 1 + ((i - 1) * 2) + (reverse and 1 or 0)
+				local opacity = ghost.opacity * math.min(1.0, 1.0 - math.abs(emudata[3].fade/16.0)) * (player.blink and 0.5 or 1.0)
+				if not reverse then
+					if logonly then
+						drawlog:write("IMGB("..tostring(x-ox)..","..tostring(y-oy)..",pose_data["..tostring(ghost.gfx).."]["..tostring(gi).."],"..tostring(xi*dx)..","..tostring(yi*dy)..","..tostring(dx)..","..tostring(dy)..","..tostring(opacity)..") ")
+					else
+						gui.gdoverlayclip("bottom", x-ox, y-oy, pose_data[ghost.gfx][gi], xi*dx, yi*dy, dx, dy, opacity)
+					end
 				else
-					gui.gdoverlayclip("bottom", x-ox, y-oy, pose_data[ghost.gfx][gi], xi*dx, yi*dy, dx, dy, opacity)
-				end
-			else
-				if logonly then
-					drawlog:write("IMGB("..tostring(x-ox)..","..tostring(y-oy)..",pose_data["..tostring(ghost.gfx).."]["..tostring(gi).."],"..tostring((15-xi)*dx)..","..tostring(yi*dy)..","..tostring(dx)..","..tostring(dy)..","..tostring(opacity)..") ")
-				else
-					gui.gdoverlayclip("bottom", x-ox, y-oy, pose_data[ghost.gfx][gi], (15-xi)*dx, yi*dy, dx, dy, opacity)
+					if logonly then
+						drawlog:write("IMGB("..tostring(x-ox)..","..tostring(y-oy)..",pose_data["..tostring(ghost.gfx).."]["..tostring(gi).."],"..tostring((15-xi)*dx)..","..tostring(yi*dy)..","..tostring(dx)..","..tostring(dy)..","..tostring(opacity)..") ")
+					else
+						gui.gdoverlayclip("bottom", x-ox, y-oy, pose_data[ghost.gfx][gi], (15-xi)*dx, yi*dy, dx, dy, opacity)
+					end
 				end
 			end
+		end
+
+		local x, y = math.floor((player.posx - scrollx) / 0x1000), math.floor((player.posy - scrolly) / 0x1000)
+		if player.offscreen then
+			-- TODO: add extra display code here
+		else
+			put(x, y)
 		end
 	end
 end
 
 function draw_delay(ghost,delay, index)
-	gui.text((index-1)*6*5+1,0,string.format("%d", delay))
-	gui.line((index-1)*6*5,6,index*6*5-1,6,ghost.color)
-	gui.line(index*6*5-1,6,index*6*5-1,0,ghost.color)
+	local ybase = -192
+	gui.text((index-1)*6*7+1,ybase,string.format("%d", delay))
+	gui.line((index-1)*6*7,8+ybase,index*6*7-1,8+ybase,ghost.color)
+	gui.line(index*6*7-1,8+ybase,index*6*7-1,ybase,ghost.color)
 end
 
 -- End of definitions. Start running.
