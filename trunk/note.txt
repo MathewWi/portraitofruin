@@ -1,11 +1,16 @@
 
-recover 1 (Jonathan) or 2 (Charotte) mp: takes 32 frames (for dart at least)
-dart: costs 3 mp
+forward -> backdash,forward+crouch,...
+  7168 -> (13784+11384) / 2 = 12584
 
 backdash+griffon+kick:
   (13784+13232+12680+12128+11576)/5 = 12680
 backdash+doublejump+kick:
   (13784+13232+12680+12128+11576+11024*2)/7 = 12206.8571
+
+
+
+recover 1 (Jonathan) or 2 (Charotte) mp: takes 32 frames (for dart at least)
+dart: costs 3 mp
 
 backdash+dart (uses backdash+slide while recovering mp):
   blank0: (13784+11736)/2 = 12760; (12760*2 + 11350*(3*32-2))/(3*32) = 11379.375
@@ -28,8 +33,6 @@ backdash+slide:
   (13784+13232+12680+12128+11576+11024+10472+9920+11968+11648+11328+11008+10688+10368+10048+9728) / 16 = 11350
 backdash+jump:
   (13784+13232+12680+12128+11576+11024+10472+9920+9368+8816+8264+7712+13784+13232+12680+12128+11576) / 17 = 11316.2353
-forward+backdash+blank
-  (7168+13784+11384) / 3 = 10778.6667
 backdash+jump (without partner switch):
   (13784+13232+12680+12128+11576+11024+10472+9920+9368+8816+8264+7712) / 12 = 10748
 backdash+crouch:
