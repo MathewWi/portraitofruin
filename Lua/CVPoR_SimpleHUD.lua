@@ -2,18 +2,23 @@
 -- Simple RAM Display (good for livestreaming!)
 
 local opacityMaster = 0.68
+local showHitboxes = true
 gui.register(function()
 	local frame = emu.framecount()
 	local lagframe = emu.lagcount()
 	local moviemode = ""
 
 	local igframe = memory.readdword(0x021119e0)
+	local camx = math.floor(memory.readdwordsigned(0x02111a08) / 0x1000)
+	local camy = math.floor(memory.readdwordsigned(0x02111a0c) / 0x1000)
+	local jo_visible = memory.readbyte(0x020fcaf5)<0x80
 	local jo_x = memory.readdwordsigned(0x020fcab0)
 	local jo_y = memory.readdwordsigned(0x020fcab4)
 	local jo_vx = memory.readdwordsigned(0x020fcabc)
 	local jo_vy = memory.readdwordsigned(0x020fcac0)
 	local jo_inv = memory.readbyte(0x020fcb45)
 	local jo_mptimer = memory.readword(0x020fca98)
+	local ch_visible = memory.readbyte(0x020fcc55)<0x80
 	local ch_x = memory.readdwordsigned(0x020fcc10)
 	local ch_y = memory.readdwordsigned(0x020fcc14)
 	local ch_vx = memory.readdwordsigned(0x020fcc1c)
@@ -58,6 +63,36 @@ gui.register(function()
 				gui.text(171, dispy, string.format("%X %03d %08X", i, memory.readword(base), memory.readdword(base-0xf8)))
 				dispy = dispy + 10
 			end
+		end
+
+		-- enemy's hitbox
+		if showHitboxes then
+			for i = 0, 63 do
+				local rectad = 0x02132cf2 + (i * 0x14)
+				local left = memory.readwordsigned(rectad+0) - camx
+				local top = memory.readwordsigned(rectad+2) - camy
+				local right = memory.readwordsigned(rectad+4) - camx
+				local bottom = memory.readwordsigned(rectad+6) - camy
+				if top >= 0 then
+					gui.box(left, top, right, bottom, "clear", "#00ff00aa")
+				end
+			end
+		end
+		-- Jonathan's hitbox
+		if showHitboxes and jo_visible then
+			local left = memory.readwordsigned(0x0213296e) - camx
+			local top = memory.readwordsigned(0x02132970) - camy
+			local right = memory.readwordsigned(0x02132972) - camx
+			local bottom = memory.readwordsigned(0x02132974) - camy
+			gui.box(left, top, right, bottom, "clear", "#00ffffaa")
+		end
+		-- Charlotte's hitbox
+		if showHitboxes and ch_visible then
+			local left = memory.readwordsigned(0x02132982) - camx
+			local top = memory.readwordsigned(0x02132984) - camy
+			local right = memory.readwordsigned(0x02132986) - camx
+			local bottom = memory.readwordsigned(0x02132988) - camy
+			gui.box(left, top, right, bottom, "clear", "#ff0000aa")
 		end
 	end
 end)
